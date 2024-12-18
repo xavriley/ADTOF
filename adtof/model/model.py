@@ -407,28 +407,29 @@ class Model(object):
 
         # Predict the file and write the output
         for track in tracks():
-            try:
-                if not os.path.exists(outputFolder):
-                    os.makedirs(outputFolder)
-                outputTrackPath = os.path.join(outputFolder, track.title + ".txt")
-                if os.path.exists(outputTrackPath):
-                    continue
+            # try:
+            if not os.path.exists(outputFolder):
+                os.makedirs(outputFolder)
+            outputTrackPath = os.path.join(outputFolder, track.title + ".txt")
+            if os.path.exists(outputTrackPath):
+                continue
 
-                Y = self.predict(track, **kwargs)
-                sparseResultIdx = pp.predict([Y], **kwargs)[0]  # peakPicking.peakPicking(Y,ppProcess=ppp, timeOffset=kwargs["labelOffset"] / kwargs["sampleRate"], **kwargs)
+            Y = self.predict(track, **kwargs)
+            sparseResultIdx = pp.predict([Y], **kwargs)[0]  # peakPicking.peakPicking(Y,ppProcess=ppp, timeOffset=kwargs["labelOffset"] / kwargs["sampleRate"], **kwargs)
 
-                # write text
-                formatedOutput = [(time, pitch) for pitch, times in sparseResultIdx.items() for time in times]
-                formatedOutput.sort(key=lambda x: x[0])
-                TextReader().writteBeats(outputTrackPath, formatedOutput)
+            # write text
+            formatedOutput = [(time, pitch) for pitch, times in sparseResultIdx.items() for time in times]
+            formatedOutput.sort(key=lambda x: x[0])
+            TextReader().writteBeats(outputTrackPath, formatedOutput)
 
-                #  write midi
-                if writeMidi:
-                    midi = PrettyMidiWrapper.fromDict(sparseResultIdx)
-                    midi.write(os.path.join(outputFolder, track.title + ".mid"))
+            #  write midi
+            # if writeMidi:
+            #     breakpoint()
+            midi = PrettyMidiWrapper.fromDict(sparseResultIdx)
+            midi.write(os.path.join(outputFolder, track.title + ".mid"))
 
-            except Exception as e:
-                logging.error(str(e))
+            # except Exception as e:
+            #     logging.error(str(e))
 
     def evaluate(self, dataset, peakThreshold=None, earlyStopping=None, datasetName="", modelName="", multiplePPThreshold=False, debug=False, tatumSubdivision=None, **kwargs):
         """
@@ -442,19 +443,19 @@ class Model(object):
         NAME = []
         TATUMSTIME = []
         for i, track in enumerate(dataset):
-            try:
-                startTime = time.time()
-                predictions.append(self.predict(track, tatumSubdivision=tatumSubdivision, **kwargs))
-                Y.append(track.y)
-                NAME.append(track.title)
-                LOSS.append(self.model.compute_loss(y=tf.constant(track.yDense[:-1]), y_pred=tf.constant(predictions[-1])).numpy())  # TODO: should add sample Weight?
-                if tatumSubdivision is not None:
-                    TATUMSTIME.append(track.tatumsTime)
-                logging.debug("track %s predicted in %s", i, time.time() - startTime)
-                if earlyStopping is not None and i >= earlyStopping:
-                    break
-            except Exception as e:
-                logging.error("track %s not predicted! Skipped because of %s", i, str(e))
+            # try:
+            startTime = time.time()
+            predictions.append(self.predict(track, tatumSubdivision=tatumSubdivision, **kwargs))
+            Y.append(track.y)
+            NAME.append(track.title)
+            LOSS.append(self.model.compute_loss(y=tf.constant(track.yDense[:-1]), y_pred=tf.constant(predictions[-1])).numpy())  # TODO: should add sample Weight?
+            if tatumSubdivision is not None:
+                TATUMSTIME.append(track.tatumsTime)
+            logging.debug("track %s predicted in %s", i, time.time() - startTime)
+            if earlyStopping is not None and i >= earlyStopping:
+                break
+            # except Exception as e:
+            #     logging.error("track %s not predicted! Skipped because of %s", i, str(e))
 
         if len(predictions) == 0:
             raise Exception("No track predicted")
