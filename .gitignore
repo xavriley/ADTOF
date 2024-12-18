@@ -27,4 +27,4 @@ bin/profile
 # plots generated
 *.png
 !Dataset.png
-*.pdf
+*.pdfadtof/models/*
